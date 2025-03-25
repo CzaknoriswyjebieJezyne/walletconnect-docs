@@ -1,131 +1,49 @@
-import Container from './../components/Container'
-import Tabs from '@theme/Tabs'
-import TabItem from '@theme/TabItem'
-import PlatformTabs from '../components/PlatformTabs'
-import PlatformTabItem from '../components/PlatformTabItem'
-import CloudBanner from '../components/CloudBanner'
-import Wrapper from '../components/Home/Wrapper'
-import w3iLogo from '../../static/assets/home/web3inboxLogo.png'
-
 # Introduction
 
-The Web3Inbox SDK allows one to easily make use of WalletConnect's [notify](../specs/clients/notify/client-api.md) and [chat](../specs/clients/chat/client-api.md) SDKs. This is done by rendering a WebView of the Web3Inbox dapp.
+The Web3Inbox SDK provides a toolkit for integrating Web3 notification features into apps. Web3Inbox can be used to send notifications from your app directly to wallets.
 
-<CloudBanner />
+This SDK utilizes WalletConnect's Notify API and is designed for Web3 scenarios, providing event-based notifications for activities like DAO votes, DeFi transaction alerts, and updates for NFT holders. Apps can send notifications to subscribed accounts, and users can receive and view their notifications in a supporting wallet, in the [Web3Inbox.com app](https://app.web3inbox.com), or in the app's frontend. Users can also discover Notify-compatible apps in their wallet or the [Web3Inbox.com app](https://app.web3inbox.com) to subscribe to.
 
-:::caution
+The Web3Inbox SDK is not to be confused with the [Web3Inbox.com app](https://app.web3inbox.com) which allows users to receive and manage their notifications from all apps, as they would in a wallet.
 
-Web3Inbox is under development. Want early access? Join our [Pilot Program](https://walletconnect.com/partners)
+![Web3Inbox](/assets/web3inbox/w3i-hero.png)
 
-:::
+## Getting Started
 
-## QuickStart
+Web3Inbox can be added to your app in a few steps:
 
-<Wrapper
-  type="large"
-  style={{
-    marginTop: '2rem'
-  }}
-  items={[
-    {
-      name: 'Dapp Widget',
-      description: 'Get started with web3inbox by embedding the dapp widget in your website.',
-      icon: w3iLogo,
-      href: '/2.0/web3inbox/widget/about'
-    }
-  ]}
-/>
+- [Setup your project](cloud-setup) to send authenticated notifications.
+- Use our [frontend SDK](frontend-integration/usage) to enable users to subscribe to notifications in your app.
+- Finally, use [WalletConnect Cloud](cloud-sending) or our [API in your backend](backend-integration) to send notifications to subscribed users.
 
-## Features
+## Overview
 
 Some of the key features of the Web3Inbox SDK include:
 
-- **Manage what SDKs to use and UI pages to show**
-- **Display push notification history**
-- **Chat with peers**
+- **Device push notifications:** Push notifications to the user's wallet (if it supports Notify API) or the [Web3Inbox.com app](https://app.web3inbox.com).
+- **Notification history:** Notifications are stored and can be accessed from any device.
+- **Spam protection/subscription control.** Using notification types, subscribers can opt-out of certain notification types they do not want to receive.
+- **Tracking read status across devices.**
 
-### Getting Started
+## Subscribing and receiving notifications
 
-To get started with the Web3Inbox SDK, choose the platform you'll be using to build your project. The SDK is currently available for iOS and Android.
+Users can receive notifications in several places:
 
-## Installation
+- In the [Web3Inbox.com app](https://app.web3inbox.com) which supports push notifications and can be installed to the user's phone
+- In your app's frontend using our [frontend SDK](frontend-integration/usage)
+- Natively in their wallet if the wallet supports Notify API.
+  - You can also test with one of our sample wallets:
+    - [iOS sample wallet](https://testflight.apple.com/join/09bTAryp)
+    - [Android sample wallet](https://appdistribution.firebase.dev/i/d2c86e879abd5a86)
 
-<PlatformTabs
-	groupId="w3w"
-	activeOptions={["ios","android"]}
->
-<PlatformTabItem value="ios">
+Users can also subscribe to notifications in all of the above locations too. To be discoverable in the Web3Inbox.com app or in wallets, apps must submit an explorer listing.
 
-Web3Inbox SDK is available via [Swift Package Manager](https://swift.org/package-manager/) or [Cocoapods](https://cocoapods.org/).
+## Try it out
 
-<Tabs
-queryString="ios-method"
-	values={[
-		{ label: 'SwiftPackageManager', value: 'spm', },
-		{ label: 'Cocoapods', value: 'cocoa', },
-	]}
->
-<TabItem value="spm">
+See the [demo section](demo) for sample apps and the Web3Inbox universal inbox app.
 
-You can add a Web3Inbox SDK to your project with Swift Package Manager. In order to do that:
+## FAQ
 
-1. Open XCode
-2. Go to File -> Add Packages
-3. Paste the repo GitHub URL: https://github.com/WalletConnect/WalletConnectSwiftV2
-4. Tap Add Package
-5. Select Web3Inbox check mark
+### What chains does Web3Inbox support?
 
-</TabItem>
-<TabItem value="cocoa">
-
-1. Update Cocoapods spec repos. Type in terminal `pod repo update`
-2. Initialize Podfile if needed with `pod init`
-3. Add pod to your Podfile:
-
-```Ruby
-pod 'WalletConnectSwiftV2/Web3Inbox'
-```
-
-4. Install pods with `pod install`
-
-If you encounter any problems during package installation, you can specify the exact path to the repository
-
-```Ruby
-pod 'WalletConnectSwiftV2/Web3Inbox', :git => 'https://github.com/WalletConnect/WalletConnectSwiftV2.git', :tag => '1.5.0'
-```
-
-</TabItem>
-</Tabs>
-
-</PlatformTabItem>
-<PlatformTabItem value="android">
-
-root/build.gradle.kts:
-
-```gradle
-allprojects {
- repositories {
-    mavenCentral()
-    maven { url "https://jitpack.io" }
- }
-}
-```
-
-app/build.gradle.kts
-
-```gradle
-implementation("com.walletconnect:android-core:release_version")
-implementation("com.walletconnect:web3inbox:release_version")
-```
-
-#### Requirements
-
-- Android min SDK 23
-- Java 11
-
-</PlatformTabItem>
-</PlatformTabs>
-
-## Next Steps
-
-Now that you've installed Web3Inbox SDK, you're ready to start integrating it. The next section will walk you through the process of setting up your project to use the SDK.
+Web3Inbox supports EOA accounts on all `eip155` (EVM) chains, and smart accounts on all `eip155` chains that our Blockchain API [supports](https://github.com/WalletConnect/blockchain-api/blob/master/SUPPORTED_CHAINS.md). We have plans to expand support in the future.

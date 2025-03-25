@@ -7,6 +7,10 @@ import CloudBanner from '../../components/CloudBanner'
 
 # Introduction
 
+:::caution
+Auth API is in the process of being greatly simplified, and will involve breaking changes. Please stand by.
+:::
+
 WalletConnect Auth is an authentication protocol that can be used to log-in blockchain wallets into apps. With a simple and lean interface, this API verifies wallet address ownership through a single signature request, realizing login in one action. It enables apps to set up a decentralized and passwordless onboarding flow.
 
 ## Key Features
@@ -25,7 +29,7 @@ Domain binding to prevent phishing (coming in beta!): WalletConnect Auth seeks t
 
 <PlatformTabs
 groupId="api-auth"
-activeOptions={["web","ios","android","flutter"]}>
+activeOptions={["web","ios","android","flutter","csharp"]}>
 
 <PlatformTabItem value="web">
 Install the WalletConnect client package.
@@ -61,7 +65,7 @@ You can add a WalletConnect SDK to your project with Swift Package Manager. In o
 2. Initialize Podfile if needed with `pod init`
 3. Add pod to your Podfile:
 
-```Ruby
+```ruby
 pod 'WalletConnectSwiftV2'
 ```
 
@@ -69,7 +73,7 @@ pod 'WalletConnectSwiftV2'
 
 If you encounter any problems during package installation, you can specify the exact path to the repository
 
-```Ruby
+```ruby
 pod 'WalletConnectSwiftV2', :git => 'https://github.com/WalletConnect/WalletConnectSwiftV2.git', :tag => '1.0.5'
 ```
 
@@ -129,6 +133,20 @@ Add the following to your `DebugProfile.entitlements` and `Release.entitlements`
 ```xml
 <key>com.apple.security.network.client</key>
 <true/>
+```
+
+</PlatformTabItem>
+
+<PlatformTabItem value="csharp">
+
+#### Install vis Nuget
+
+Install the WalletConnect Auth client package via Nuget.
+
+install via Nuget
+
+```shell
+dotnet add package WalletConnect.Auth
 ```
 
 </PlatformTabItem>

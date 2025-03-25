@@ -1,13 +1,13 @@
 # Relay Client
+
 import Container from '../../components/Container'
 import Tabs from '@theme/Tabs'
 import TabItem from '@theme/TabItem'
 import PlatformTabs from '../../components/PlatformTabs'
 import PlatformTabItem from '../../components/PlatformTabItem'
-import CloudBanner from '../../components/CloudBanner'
 
-Relay client provides transport layer for Sign, Auth and Chat SDKs. 
-You can configure it once and every SDK will transport protocol messages via same instance of a relay client with only one opened websocket connection. 
+Relay client provides transport layer for Sign, Auth and Chat SDKs.
+You can configure it once and every SDK will transport protocol messages via same instance of a relay client with only one opened websocket connection.
 The Relay API can be accessed through the Core Client
 
 <PlatformTabs
@@ -36,6 +36,8 @@ struct SocketFactory: WebSocketFactory {
 
 Please note that if you have made changes to the list of **Allowed Domains** in the **WalletConnect Cloud Dashboard**, then you may encounter an error with the connection if you use **Starscream** or any other socket client. For example, the native implementation of **Starscream** will use the `relay.walletconnect.com` as an `Origin` parameter if not provided, which will be missing from the list of **Allowed Domains**. The solution to this could be the inclusion of the `relay.walletconnect.com` in the **Allowed Domains**, corresponding changes in the socket client implementation, or following changes in the `WebSocketFactory`.
 
+Create and register App Group Identifier in [Apple Developer Center](https://developer.apple.com/account/resources/identifiers/list/applicationGroup) if needed and provide it during Networking client configuration.
+
 ```swift
 import Starscream
 
@@ -50,24 +52,30 @@ struct DefaultSocketFactory: WebSocketFactory {
 }
 ```
 
-#### Networking client configuration 
+#### Networking client configuration
 
 ```swift
-Networking.configure(projectId: <String>, socketFactory: SocketFactory())
+Networking.configure(groupIdentifier: <String>, projectId: <String>, socketFactory: SocketFactory())
 ```
+
+`groupIdentifier` - App group identifier, created on [Apple Developer Center](https://developer.apple.com/account/resources/identifiers/list/applicationGrou). Enables to share keychain items between the Notify SDK and a UNNotificationServiceExtension to receive and decrypt push notifications.
 
 #### Web Socket Connection
 
 By default web socket connection is handled internally by the SDK. That means that Web socket will be safely disconnected when apps go to background and it will connect back when app reaches foreground. But if it is not expected for your app and you want to handle socket connection manually you can do it as follows:
 
-1. set socketConnectionType for manual  
+1. set socketConnectionType for manual
+
 ```swift
 Networking.configure(projectId: <String>, socketFactory: SocketFactory(), socketConnectionType: .manual)
-```  
-2. control socket connection:  
+```
+
+2. control socket connection:
+
 ```swift
 try Networking.instance.connect()
 ```
+
 ```swift
 try Networking.instance.disconnect()
 ```
@@ -82,6 +90,7 @@ There are two connection types, Automatic and Manual.
 Automatic connection type enables SDK to control web socket connection internally. Meaning, web socket connection is closed when app goes to the background and is opened when app goes to the foreground.
 
 Manual connection type enables developers to control web socket connection.
+
 ```kotlin
 CoreClient.initialize(relayServerUrl = serverUrl, connectionType = ConnectionType.MANUAL, application = application)
 

@@ -3,17 +3,14 @@ import Tabs from '@theme/Tabs'
 import TabItem from '@theme/TabItem'
 import PlatformTabs from '../../components/PlatformTabs'
 import PlatformTabItem from '../../components/PlatformTabItem'
-import CloudBanner from '../../components/CloudBanner'
 
 # Dapp Usage
-
-<CloudBanner/>
 
 ## Implementation
 
 <PlatformTabs
 groupId="api-sign"
-activeOptions={["web","ios","android","flutter"]}>
+activeOptions={["web","ios","android","flutter","csharp", "unity"]}>
 
 <PlatformTabItem value="web">
 This library is compatible with Node.js, browsers and React Native applications (Node.js modules require polyfills for React Native).
@@ -25,7 +22,7 @@ npm install @walletconnect/modal
 ```
 
 :::info
-For an example implementation, please refer to our `react-dapp-v2` [example](https://github.com/WalletConnect/web-examples/tree/main/dapps/react-dapp-v2).
+For an example implementation, please refer to our `react-dapp-v2` [example](https://github.com/WalletConnect/web-examples/tree/main/advanced/dapps/react-dapp-v2).
 :::
 
 #### Install Packages
@@ -59,7 +56,7 @@ const signClient = await SignClient.init({
 **2. Add listeners for desired `SignClient` events.**
 
 :::info
-To listen to pairing-related events, please follow the guidance for [Pairing API event listeners](../core//pairing.mdx).
+To listen to pairing-related events, please follow the guidance for [Pairing API event listeners](https://specs.walletconnect.com/2.0/specs/clients/core/pairing/pairing-api).
 :::
 
 ```javascript
@@ -132,6 +129,38 @@ try {
 }
 ```
 
+#### Session Authenticate with ReCaps
+
+The authenticate() method enhances the WalletConnect protocol, offering EVM dApps a sophisticated mechanism to request wallet authentication and simultaneously establish a session. This innovative approach not only authenticates the user but also facilitates a seamless session creation, integrating the capabilities defined by ERC-5573, also known as ReCaps.
+
+ReCaps extend the SIWE protocol, enabling users to give informed consent for dApps to exercise scoped capabilities on their behalf. This consent mechanism is crucial for authorizing a dApp to perform actions or access resources, thus ensuring security and trust in dApp interactions. These scoped capabilities are specified through ReCap URIs in the resources field of the AuthRequestParams, which translate to human-readable consent in the SIWE message, detailing the actions a dApp is authorized to undertake.
+
+To initiate an authentication and authorization request, a dApp invokes the authenticate() method, passing in parameters that include desired capabilities as outlined in EIP-5573. The method generates a pairing URI for user interaction, facilitating a streamlined authentication and consent process.
+
+Example of initiating an authentication request with ReCaps:
+
+```typescript
+const { uri, response } = await signClient.authenticate({
+  chains: ['eip155:1', 'eip155:2'], // chains your dapp requests authentication for
+  domain: 'localhost', // your domain
+  uri: 'http://localhost/login', // uri
+  nonce: '1239812982', // random nonce
+  methods: ['personal_sign', 'eth_chainId', 'eth_signTypedData_v4'], // the methods you wish to use
+  resources: ['https://example.com'] // any resources relevant to the connection
+})
+
+// Present the URI to users as QR code to be able to connect with a wallet
+...
+
+// wait for response
+const result = await response()
+
+// after a Wallet establishes a connection response will resolve with auths ( authentication objects ) & the established session
+const { auths, session } = result;
+
+// now you can send requests to that session
+```
+
 #### Making Requests
 
 Once the session has been established successfully, you can start making JSON-RPC requests to be approved and signed by the wallet:
@@ -141,15 +170,16 @@ const result = await signClient.request({
   topic: session.topic,
   chainId: 'eip155:1',
   request: {
-    method: "personal_sign",
+    method: 'personal_sign',
     params: [
-      "0x7468697320697320612074657374206d65737361676520746f206265207369676e6564",
-      "0x1d85568eEAbad713fBB5293B45ea066e552A90De",
-    ],
-});
+      '0x7468697320697320612074657374206d65737361676520746f206265207369676e6564',
+      '0x1d85568eEAbad713fBB5293B45ea066e552A90De'
+    ]
+  }
+})
 ```
 
-> For more information on available JSON-RPC requests, see the [JSON-RPC reference](../../advanced/rpc-reference/ethereum-rpc.md).
+> For more information on available JSON-RPC requests, see the [JSON-RPC reference](../../advanced/multichain/rpc-reference/ethereum-rpc.md).
 
 ### Restoring a Session
 
@@ -193,6 +223,14 @@ Make sure that you properly configure Networking and Pair Clients first.
 - [Networking](../core/relay.mdx)
 - [Pairing](../core/pairing.mdx)
 
+#### Configure Sign Client
+
+In order to initialize a client, call a `configure` method on the Sign instance
+
+```swift
+Sign.configure(crypto: CryptoProvider)
+```
+
 #### Subscribe for Sign publishers
 
 When your `Sign` instance receives requests from a peer it will publish related event. So you should set subscription to handle them.
@@ -233,13 +271,92 @@ let blockchains: Set<Blockchain> = [Blockchain("eip155:1")!, Blockchain("eip155:
 let namespaces: [String: ProposalNamespace] = ["eip155": ProposalNamespace(chains: blockchains, methods: methods, events: []]
 ```
 
-To learn more on namespaces, check out our [specs](../../specs/clients/sign/namespaces).
+To learn more on namespaces, check out our [specs](https://specs.walletconnect.com/2.0/specs/clients/sign/namespaces).
 
 2. Your App should generate a pairing URI and share it with a wallet. Uri can be presented as a QR code or sent via a universal link. Wallet begins subscribing for session proposals after receiving URI. In order to create a pairing and send a session proposal, you need to call the following:
 
 ```Swift
-let uri = try await Pair.instance.create()
-try await Sign.instance.connect(requiredNamespaces: namespaces, topic: uri.topic)
+let uri = try await Sign.instance.connect(requiredNamespaces: namespaces, topic: uri.topic)
+```
+
+#### Session Authenticate with ReCaps
+
+The authenticate() method enhances the WalletConnect protocol, offering EVM dApps a sophisticated mechanism to request wallet authentication and simultaneously establish a session. This innovative approach not only authenticates the user but also facilitates a seamless session creation, integrating the capabilities defined by ERC-5573, also known as ReCaps.
+
+ReCaps extend the SIWE protocol, enabling users to give informed consent for dApps to exercise scoped capabilities on their behalf. This consent mechanism is crucial for authorizing a dApp to perform actions or access resources, thus ensuring security and trust in dApp interactions. These scoped capabilities are specified through ReCap URIs in the resources field of the AuthRequestParams, which translate to human-readable consent in the SIWE message, detailing the actions a dApp is authorized to undertake.
+
+To initiate an authentication and authorization request, a dApp invokes the authenticate() method, passing in parameters that include desired capabilities as outlined in EIP-5573. The method generates a pairing URI for user interaction, facilitating a streamlined authentication and consent process.
+
+Example of initiating an authentication request with ReCaps:
+
+```swift
+func initiateAuthentication() {
+    Task {
+        do {
+            let authParams = AuthRequestParams.stub() // Customize your AuthRequestParams as needed
+            let uri = try await Sign.instance.authenticate(authParams)
+            // Present the URI to the user, e.g., show a QR code or send a deep link
+            presentAuthenticationURI(uri)
+        } catch {
+            print("Failed to initiate authentication request: \(error)")
+        }
+    }
+}
+```
+
+##### Subscribe to Authentication Responses
+
+Once you have initiated an authentication request, you need to listen for responses from wallets. Responses will indicate whether the authentication request was approved or rejected. Use the authResponsePublisher to subscribe to these events.
+
+Example subscription to authentication responses:
+
+```swift
+Sign.instance.authResponsePublisher
+    .receive(on: DispatchQueue.main)
+    .sink { response in
+        switch response.result {
+        case .success(let (session, _)):
+            if let session = session {
+                // Authentication successful, session established
+                handleSuccessfulAuthentication(session)
+            } else {
+                // Authentication successful, but no session created (SIWE-only flow)
+                handleSuccessfulAuthenticationWithoutSession()
+            }
+        case .failure(let error):
+            // Authentication request was rejected or failed
+            handleAuthenticationFailure(error)
+        }
+    }
+    .store(in: &subscriptions)
+```
+
+In this setup, the authResponsePublisher notifies your dApp of the outcome of the authentication request. Your dApp can then proceed based on whether the authentication was successful, rejected, or failed due to an error.
+
+Example of AuthRequestParams:
+
+```swift
+extension AuthRequestParams {
+    static func stub(
+        domain: String = "yourDappDomain.com",
+        chains: [String] = ["eip155:1", "eip155:137"],
+        nonce: String = "uniqueNonce",
+        uri: String = "https://yourDappDomain.com/login",
+        statement: String? = "I accept the Terms of Service: https://yourDappDomain.com/tos",
+        resources: [String]? = nil, // here your dapp may request authorization with recaps
+        methods: [String]? = ["personal_sign", "eth_sendTransaction"]
+    ) -> AuthRequestParams {
+        return try! AuthRequestParams(
+            domain: domain,
+            chains: chains,
+            nonce: nonce,
+            uri: uri,
+            statement: statement,
+            resources: resources,
+            methods: methods
+        )
+    }
+}
 ```
 
 #### Send Request to the Wallet
@@ -255,6 +372,16 @@ try await Sign.instance.request(params: request)
 ```
 
 When wallet respond `sessionResponsePublisher` will publish an event so you can verify the response.
+
+#### Extending a Session
+
+By default, session lifetime is set for 7 days and after that time user's session will expire. But if you consider that a session should be extended you can call:
+
+```Swift
+try await Sign.instance.extend(topic: session.topic)
+```
+
+Above method will extend a user's session to a week.
 
 #### Where to go from here
 
@@ -307,6 +434,10 @@ val dappDelegate = object : SignClient.DappDelegate {
         // Triggered when Dapp receives the session rejection from wallet
     }
 
+    fun onSessionAuthenticateResponse(sessionAuthenticateResponse: Sign.Model.SessionAuthenticateResponse) {
+        // Triggered when Dapp receives the session authenticate response from wallet
+    }
+
     override fun onSessionUpdate(updatedSession: Sign.Model.UpdatedSession) {
         // Triggered when Dapp receives the session update from wallet
     }
@@ -325,6 +456,14 @@ val dappDelegate = object : SignClient.DappDelegate {
 
     override fun onSessionRequestResponse(response: Sign.Model.SessionRequestResponse) {
         // Triggered when Dapp receives the session request response from wallet
+    }
+
+    override fun onProposalExpired(proposal: Modal.Model.ExpiredProposal) {
+        // Triggered when a proposal becomes expired
+    }
+
+    override fun onRequestExpired(request: Modal.Model.ExpiredRequest) {
+        // Triggered when a request becomes expired
     }
 
     override fun onConnectionStateChange(state: Sign.Model.ConnectionState) {
@@ -366,6 +505,58 @@ fun SignClient.connect(connectParams,
 ```
 
 More about optional and required namespaces can be found [here](https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-25.md)
+
+#
+
+#### **Authenticate**
+
+The authenticate() method enhances the WalletConnect protocol, offering EVM dApps a sophisticated mechanism to request wallet authentication and simultaneously establish a session. This innovative approach not only authenticates the user but also facilitates a seamless session creation, integrating the capabilities defined by ERC-5573, also known as ReCaps.
+
+Capabilities are specified through ReCap URIs in the resources field of the Sign.Params.Authenticate, which translate to human-readable consent in the SIWE message, detailing the actions a dApp is authorized to undertake.
+
+To initiate an authentication and authorization request, a dApp invokes the authenticate() method, passing in parameters that include desired capabilities as outlined in EIP-5573. The method generates a pairing URI for user interaction, facilitating a streamlined authentication and consent process.
+
+Example of initiating an authentication request with ReCaps:
+
+```kotlin
+ val authenticateParams = Sign.Params.Authenticate(
+            domain = "your.domain",
+            chains = listof("eip155:1", "eip155:137"),
+            methods = listOf("personal_sign", "eth_signTypedData"),
+            uri = "https://yourDappDomain.com/login",
+            nonce = randomNonce,
+            statement = "Sign in with wallet.",
+            resources = null, // here your dapp may request authorization with recaps
+        )
+
+SignClient.authenticate(authenticateParams,
+    onSuccess = { url ->
+        //Handle authentication URI. Show as a QR code a send via deeplink
+    },
+    onError = { error ->
+        //Handle error
+    }
+)
+```
+
+Once you have sent an authentication request, await for responses from wallets. Responses will indicate whether the authentication request was approved or rejected. Use the onSessionAuthenticateResponse callback to receive a response:
+
+```kotlin
+ fun onSessionAuthenticateResponse(sessionAuthenticateResponse: Sign.Model.SessionAuthenticateResponse) {
+        // Triggered when Dapp receives the session authenticate response from wallet
+
+        if (sessionAuthenticateResponse is Sign.Model.SessionAuthenticateResponse.Result) {
+            if (sessionAuthenticateResponse.session != null) {
+                // Authentication successful, session established
+            } else {
+                // Authentication successful, but no session created (SIWE-only flow)
+            }
+        } else {
+            // Authentication request was rejected or failed
+        }
+
+}
+```
 
 #
 
@@ -489,6 +680,356 @@ Expected flutter version is: >`3.3.10`
 - `flutter pub run dependency_validator` - show unused dependencies and more
 - `dart format lib/* -l 120`
 - `flutter analyze`
+
+</PlatformTabItem>
+
+<PlatformTabItem value="csharp">
+
+#### Setup
+
+First you must setup `SignClientOptions` which stores both the `ProjectId` and `Metadata`. You may also optionally specify the storage module to use. By default, the `FileSystemStorage` module is used if none is specified.
+
+```csharp
+var dappOptions = new SignClientOptions()
+{
+    ProjectId = "39f3dc0a2c604ec9885799f9fc5feb7c",
+    Metadata = new Metadata()
+    {
+        Description = "An example dapp to showcase WalletConnectSharpv2",
+        Icons = new[] { "https://walletconnect.com/meta/favicon.ico" },
+        Name = "WalletConnectSharpv2 Dapp Example",
+        Url = "https://walletconnect.com"
+    },
+    // Uncomment to disable persistent storage
+    // Storage = new InMemoryStorage()
+};
+```
+
+Then, you must setup the `ConnectOptions` which define what blockchain, RPC methods and events your dapp will use.
+
+_C# Constructor_
+
+```csharp
+var dappConnectOptions = new ConnectOptions()
+{
+    RequiredNamespaces = new RequiredNamespaces()
+    {
+        {
+            "eip155", new RequiredNamespace()
+            {
+                Methods = new[]
+                {
+                    "eth_sendTransaction",
+                    "eth_signTransaction",
+                    "eth_sign",
+                    "personal_sign",
+                    "eth_signTypedData",
+                },
+                Chains = new[]
+                {
+                    "eip155:1"
+                },
+                Events = new[]
+                {
+                    "chainChanged",
+                    "accountsChanged",
+                }
+            }
+        }
+    }
+};
+```
+
+_Builder Functions Style_
+
+```csharp
+var dappConnectOptions1 = new ConnectOptions()
+    .RequireNamespace("eip155", new RequiredNamespace()
+        .WithMethod("eth_sendTransaction")
+        .WithMethod("eth_signTransaction")
+        .WithMethod("eth_sign")
+        .WithMethod("personal_sign")
+        .WithMethod("eth_signTypedData")
+        .WithChain("eip155:1")
+        .WithEvent("chainChanged")
+        .WithEvent("accountsChanged")
+    );
+```
+
+With both options defined, you can initialize and connect the SDK.
+
+```csharp
+var dappClient = await WalletConnectSignClient.Init(dappOptions);
+var connectData = await dappClient.Connect(dappConnectOptions);
+```
+
+You can grab the `Uri` for the connection request from `connectData`.
+
+```csharp
+ExampleShowQRCode(connectData.Uri);
+```
+
+Then await connection approval using the `Approval` Task object.
+
+```csharp
+Task<SessionStruct> sessionConnectTask = connectData.Approval;
+SessionStruct sessionData = await sessionConnectTask;
+
+// or
+// SessionStruct sessionData = await connectData.Approval;
+```
+
+This `Task` will return the `SessionStruct` when the session was approved, or throw an exception when the session request has either
+
+- Timed out
+- Been Rejected
+
+#### Connected Address
+
+To get the currently connected address, use the following function
+
+```csharp
+public class Caip25Address
+{
+    public string Address;
+    public string ChainId;
+}
+
+public Caip25Address GetCurrentAddress(string chain)
+{
+    if (string.IsNullOrWhiteSpace(chain))
+        return null;
+
+    var defaultNamespace = currentSession.Namespaces[chain];
+
+    if (defaultNamespace.Accounts.Length == 0)
+        return null;
+
+    var fullAddress = defaultNamespace.Accounts[0];
+    var addressParts = fullAddress.Split(":");
+
+    var address = addressParts[2];
+    var chainId = string.Join(':', addressParts.Take(2));
+
+    return new Caip25Address()
+    {
+        Address = address,
+        ChainId = chainId,
+    };
+}
+
+public Caip25Address GetCurrentAddress()
+{
+    var currentSession = dappClient.Session.Get(dappClient.Session.Keys[0]);
+
+    var defaultChain = currentSession.Namespaces.Keys.FirstOrDefault();
+
+    if (string.IsNullOrWhiteSpace(defaultChain))
+        return null;
+
+    return GetCurrentAddress(defaultChain);
+}
+```
+
+#### WalletConnect Methods
+
+All sign methods require the `topic` of the session to be given. This can be found in the `SessionStruct` object given when a session has been given approval by the user.
+
+```csharp
+var sessionTopic = sessionData.Topic;
+```
+
+##### Update Session
+
+Update a session, adding/removing additional namespaces in the given topic.
+
+```csharp
+var newNamespaces = new Namespaces(...);
+var request = await dappClient.UpdateSession(sessionTopic, newNamespaces);
+await request.Acknowledged();
+```
+
+##### Extend Session
+
+Extend a session's expiry time so the session remains open
+
+```csharp
+var request = await dappClient.Extend(sessionTopic);
+await request.Acknowledged();
+```
+
+##### Ping
+
+Send a ping to the session
+
+```csharp
+var request = await dappClient.Ping(sessionTopic);
+await request.Acknowledged();
+```
+
+#### Session Requests
+
+Sending session requests as a dapp requires to build the request **and** response classes that the session request `params` will be structured. C# is a statically typed language, so these types must be given whenever you do a session request (or do any querying for session requests).
+
+Currently, **WalletConnectSharp does not automatically assume the object type for `params` is an array**. This is very important, since most EVM RPC requests have `params` as an array type. **Use `List<T>` to workaround this**. For example, for `eth_sendTransaction`, use `List<Transaction>` instead of `Transaction`.
+
+Newtonsoft.Json is used for JSON serialization/deserialization, therefore you can use Newtonsoft.Json attributes when defining fields in your request/response classes.
+
+##### Building a Request type
+
+Create a class for the request and populate it with the JSON properties the request object has. For this example, we will use `eth_sendTransaction`
+
+The `params` field for `eth_sendTransaction` has the object type
+
+```csharp
+using Newtonsoft.Json;
+
+public class Transaction
+{
+    public string from;
+
+    // Newtonsoft.Json attributes can be used
+    [JsonProperty("to")]
+    public string To;
+
+    [JsonProperty("gas", NullValueHandling = NullValueHandling.Ignore)]
+    public string Gas;
+
+    // Properties have limited support
+    [JsonProperty("gasPrice", NullValueHandling = NullValueHandling.Ignore)]
+    public string GasPrice { get; set; }
+
+    [JsonProperty("value")]
+    public string Value { get; set; }
+
+    [JsonProperty("data", NullValueHandling = NullValueHandling.Ignore)]
+    public string Data { get; set; } = "0x";
+}
+```
+
+:::note
+
+[**the `params` field is an array of this object**](https://ethereum.org/en/developers/docs/apis/json-rpc/#eth_sendtransaction)
+:::
+
+```json
+params: [
+  {
+    from: "0xb60e8dd61c5d32be8058bb8eb970870f07233155",
+    to: "0xd46e8dd67c5d32be8058bb8eb970870f07244567",
+    gas: "0x76c0", // 30400
+    gasPrice: "0x9184e72a000", // 10000000000000
+    value: "0x9184e72a", // 2441406250
+    data: "0xd46e8dd67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f072445675",
+  },
+]
+```
+
+Now, let's define the actual request class we'll use in `dappClient.Request`
+
+```csharp
+[RpcMethod("eth_sendTransaction"), RpcRequestOptions(Clock.ONE_MINUTE, 99997)]
+public class EthSendTransaction : List<Transaction>
+{
+    public EthSendTransaction(params Transaction[] transactions) : base(transactions)
+    {
+    }
+}
+```
+
+The `RpcMethod` class attributes defines the rpc method this request uses. The `RpcRequestOptions` class attributes define the expiry time and tag attached to the request. **Both of these attributes are required**
+
+We use `List<Transaction>` since the `params` field for `eth_sendTransaction` is actually sent as an object array. If the `params` field was a normal object, then we could use `Transaction` or define the fields directly into this class.
+
+##### Sending a request
+
+The response type for `eth_sendTransaction` is a `string`, so no response type is required to be made. You only need to create a response type if the response type is a custom object.
+
+```csharp
+var wallet = GetCurrentAddress();
+var result = new EthSendTransaction(new Transaction()
+{
+    From = wallet.Address,
+    To = wallet.Address,
+    Value = "0"
+});
+
+// Returns the transaction hash or throws an error
+string result = await dappClient.Request<EthSendTransaction, string>(sessionTopic, request, wallet.ChainId);
+```
+
+#### Disconnecting
+
+To disconnect a session, use the `Disconnect` function. You may optional provide a reason for the disconnect
+
+```csharp
+await dappClient.Disconnect(sessionTopic);
+
+// or
+
+await dappClient.Disconnect(sessionTopic, Error.FromErrorType(ErrorType.USER_DISCONNECTED));
+```
+
+#### Subscribe to session events
+
+```csharp
+dappClient.SubscribeToSessionEvent("chainChanged", OnChainChanged);
+```
+
+</PlatformTabItem>
+
+<PlatformTabItem value="unity">
+
+WalletConnectUnity is a wrapper for WalletConnectSharp. It simplifies managing a single active session, addressing a common challenge with the original library.
+
+#### Features of WalletConnectUnity
+
+1. **Simplified Session Management**: WalletConnectSharp is designed to support multiple sessions, requiring developers to manually track and restore the active session. WalletConnectUnity simplifies this process by focusing on a single session, making it easier to manage session restoration.
+
+2. **Session Restoration**: WalletConnectUnity includes methods to easily access and restore the active session from storage.
+
+3. **Deep Linking Support**: WalletConnectUnity automatically handles deep linking for mobile and desktop wallets.
+
+4. **QR Code Generation**: WalletConnectUnity provides a utility for generating QR codes.
+
+#### Usage
+
+To use WalletConnectUnity in your project:
+
+1. Fill in the Project ID and Metadata fields in the `Assets/WalletConnectUnity/Resources/WalletConnectProjectConfig` asset.
+   - If you don’t have a Project ID, you can create one at [WalletConnect Cloud](https://cloud.walletconnect.com).
+   - The `Redirect` fields are optional. They are used to redirect the user back to your app after they approve or reject the session.
+2. Initialize `WalletConnect` and connect the wallet:
+
+```csharp
+// Initialize singleton
+await WalletConnect.Instance.InitializeAsync();
+
+// Or handle instancing manually
+var walletConnectUnity = new WalletConnect();
+await walletConnectUnity.InitializeAsync();
+
+// Try to resume the last session
+var sessionResumed = await WalletConnect.Instance.TryResumeSessionAsync();
+if (!sessionResumed)
+{
+    var connectedData = await WalletConnect.Instance.ConnectAsync(connectOptions);
+
+    // Create QR code texture
+    var texture = WalletConnectUnity.Core.Utils.QRCode.EncodeTexture(connectedData.Uri);
+
+    // ... Display QR code texture
+
+    // Wait for wallet approval
+    await connectedData.Approval;
+}
+```
+
+All features of WalletConnectSharp are accessible in WalletConnectUnity.
+For complex scenarios, the `SignClient` can be accessed directly through `WalletConnect.SignClient`.
+
+Refer to the `C#` documentation for details on using the Sign API within WalletConnectUnity.
+The usage of the WalletConnectSharp.Sign API remains consistent with `C#`.
 
 </PlatformTabItem>
 
